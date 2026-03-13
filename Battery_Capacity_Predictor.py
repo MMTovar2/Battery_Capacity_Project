@@ -38,17 +38,15 @@ def get_test_MSE_and_R2(model):
     print('test R2: ', r2_test_a)
     return Y_pred_test
 
+#time and model train
 def training_with_time(model):
     start_time = time.perf_counter()
     model.fit(X_train, Y_train_scl)
     end_time = time.perf_counter()
     print('time: ', end_time - start_time, ' seconds')
 
-
-data = pd.read_csv('/Users/mtovar/Documents/Matsci 166 (Data Science and Machine Learning)/battery_cycle_level_dataset_CLEAN_FINAL.csv')
-
-size_of_data = len(data)
-print('size of dataset: ',size_of_data)
+#replace with your path to the dataset
+data = pd.read_csv('/path/to/battery_cycle_level_dataset_CLEAN_FINAL.csv')
 
 #X data: voltage, temperature, and cycle
 X = data[['voltage', 'temperature', 'cycle']]
@@ -78,32 +76,32 @@ Y_test_scl = scaler_y.transform(Y_test.values.reshape(-1,1)).ravel()
 
 #Multi-layer perceptron regressor
 #used common layer structure for smaller data size (4 layers due to improved performance over 2, 3, and 5 layers),
-#used common max iteration, used relu function as it requires less Y pre-processing than sigmoid (current state sigmoid is a poor fit),
-# used default learning rate, and increased alpha for a slightly better fit
+#to test different hidden layer sizes change hidden_layer_sizes=(64, 32, 16, 8) to wanted size
+#I tested: (64, 32, 16, 8, 4), (64, 32, 16, 8), (64, 32, 16), (64, 32), (32, 16), and (128, 64)
+#used common max iteration, used relu function
+#used default learning rate, and increased alpha for a slightly better fit
 best_sgd_model = MLPRegressor(random_state=21, hidden_layer_sizes=(64, 32, 16, 8), max_iter=500, activation='relu', learning_rate_init=0.001, alpha=0.001, solver='sgd')
 best_lbfgs_model = MLPRegressor(random_state=21, hidden_layer_sizes=(64, 32, 16, 8), max_iter=5000, activation='relu', learning_rate_init=0.001, alpha=0.002, solver='lbfgs')
 best_adam_model = MLPRegressor(random_state=21, hidden_layer_sizes=(64, 32, 16, 8), max_iter=500, activation='relu', learning_rate_init=0.001, alpha=0.001)
 
 #linear Model
 linear_model = LinearRegression()
+
 print('- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -')
 
 print('SGD')
-#time and model train
 training_with_time(best_sgd_model)
 get_train_and_validation_MSE_and_R2(best_sgd_model)
 
 print('- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -')
 
 print('LBFGS')
-#time and model train
 training_with_time(best_lbfgs_model)
 get_train_and_validation_MSE_and_R2(best_lbfgs_model)
 
 print('- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -')
 
 print('AdaM')
-#time and model train
 training_with_time(best_adam_model)
 get_train_and_validation_MSE_and_R2(best_adam_model)
 Y_pred_test = get_test_MSE_and_R2(best_adam_model)
@@ -111,27 +109,25 @@ Y_pred_test = get_test_MSE_and_R2(best_adam_model)
 print('- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -')
 
 print('Linear')
-#time and model train
 training_with_time(linear_model)
 get_train_and_validation_MSE_and_R2(linear_model)
 get_test_MSE_and_R2(linear_model)
 
 print('- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -')
 
-#plots loss curve to see if learning rate is too high or low
-residuals = Y_test_scl-Y_pred_test
-
+#scatterplot of predicted y vs residuals
 plt.figure(1)
+residuals = Y_test_scl-Y_pred_test
 plt.scatter(Y_pred_test, residuals)
 size = len(Y_pred_test)
 perfect_y = np.zeros(size)
 plt.plot(Y_pred_test, perfect_y, color='red', linestyle='--', label='Perfect Fit')
-
 plt.title("Predictions vs Residual")
 plt.xlabel('Y predictions (scaled)')
 plt.ylabel('Residuals')
 plt.legend()
 
+#histogram of residuals
 plt.figure(2)
 residuals = Y_test_scl-Y_pred_test
 plt.hist(residuals, edgecolor='black', bins=20, density=False)
@@ -139,7 +135,7 @@ plt.title("Residual vs Number of samples ")
 plt.xlabel('Residuals')
 plt.ylabel('Count')
 
-
+#plots loss curve to see if learning rate is too high or low
 plt.figure(3)
 plt.plot(best_adam_model.loss_curve_)
 plt.title('Loss Curve')
